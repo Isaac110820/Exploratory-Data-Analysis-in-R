@@ -7,3 +7,6 @@ This project demonstrates a variety of data exploration techniques using three d
 -	The “gapminder” data set which contains information on demographic data in various countries throughout the world is used to explore **numerical summaries**. 
 
 All data sets can be found in the repository. 
+
+
+[Click here to see the full project](https://isaac110820.github.io/Exploratory-Data-Analysis-in-R/)
