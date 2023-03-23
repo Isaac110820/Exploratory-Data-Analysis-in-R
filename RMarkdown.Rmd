@@ -1,0 +1,614 @@
+---
+title: "Exploratory Data Analysis"
+author: "Isaac Baca"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This project demonstrates a variety of data exploration techniques using three different data sets:
+
+The *comics* data set which contains information on all comic characters that have been introduced by DC and Marvel is used to explore categorical data.
+
+The *cars* data set which contains information on all new models of cars for sale in the US in a certain year is used to explore numerical data.
+
+The *gapminder* data set which contains information on demographic data in various countries throughout the world is used to explore numerical summaries.
+
+---
+
+# Table of contents
+1. [Exploring Categorical Data](#one)
+2. [Exploring Numerical Data](#two)
+3. [Numerical Summaries](#three)
+
+------------------------------------------------------------------------
+
+# Load all necessary packages.
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+------------------------------------------------------------------------
+
+<a name="one"><a/>
+
+# Exploring Categorical Data.
+
+#### Import the comics data set and view the structure.
+
+-   The comics data set has information on all comic characters that have been introduced by DC and Marvel.
+
+```{r echo=FALSE}
+comics = read.csv("/Volumes/Vandy Main/Data Camp/R/Exploratory Data Analysis/comics.csv")
+```
+
+```{r}
+str(comics)
+```
+
+------------------------------------------------------------------------
+
+#### Some of the variables have a `chr` variable type. We need to change the type to `Factor`.
+
+```{r}
+comics[sapply(comics, is.character)] <- lapply(comics[sapply(comics, is.character)], 
+                                       as.factor)
+str(comics)
+```
+`str(comics)` shows us that all `chr` variable types have now been changed to `Factor`.
+
+------------------------------------------------------------------------
+
+#### Check levels of align.
+
+We can see that there are four possible levels that the align variable can take.
+
+```{r}
+levels(comics$align)
+```
+
+------------------------------------------------------------------------
+
+#### Check the levels of gender.
+
+There are three possible levels that the gender variable can take.
+
+```{r}
+levels(comics$gender)
+```
+
+------------------------------------------------------------------------
+
+#### Create a 2-way contingency table of the two variables.
+
+I will name this table `tab` for future use.
+
+```{r}
+tab = table(comics$align, comics$gender)
+print(tab)
+```
+
+------------------------------------------------------------------------
+
+#### The contingency table from the last exercise revealed that there are some levels that have very low counts. To simplify the analysis, we will drop these levels.
+
+-   `filter(align != "Reformed Criminals")` will filter the data set for everything that is not "Reformed Criminals".
+
+-   `droplevels()` will drop unused levels from a factor.
+
+```{r}
+comics <- comics %>%
+  filter(align != "Reformed Criminals") %>% 
+  droplevels()
+```
+
+------------------------------------------------------------------------
+
+#### The `align` variable now has three levels.
+
+```{r}
+str(comics)
+```
+
+------------------------------------------------------------------------
+
+#### We can represent a contingency table graphically for ease of interpretation using a side-by-side bar chart.
+
+-   First, we create a side-by-side bar chart with `align` on the x-axis and `gender` as the fill aesthetic.
+
+-   Passing the argument `position = "dodge"` to `geom_bar()` says that you want a side-by-side (i.e. not stacked) bar chart.
+
+```{r}
+ggplot(comics, aes(x = align, fill = gender)) + 
+  geom_bar(position = "dodge")
+```
+
+------------------------------------------------------------------------
+
+#### We can switch the x-axis and y-axis variables
+
+-   Create a side-by-side bar chart with `gender` on the x-axis and `align` as the fill aesthetic.
+-   `theme(axis.text.x = element_text(angle = 90))` rotates the axis lables 90 degrees to enhance readability.
+
+```{r}
+ggplot(comics, aes(x = gender, fill = align)) + 
+  geom_bar(position = "dodge") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+------------------------------------------------------------------------
+
+#### Obtain a conditional proportion table.
+
+-   The second argument in `prop.table()` specifies whether to condition on the rows or the columns.
+-   `1` conditions on the rows, `2` conditions on the columns.
+
+```{r}
+prop.table(tab, 1)
+prop.table(tab, 2)
+```
+
+---
+
+#### Counts vs Proportions represented graphically with bar charts.
+
+-   First, we create a stacked bar chart of `gender` *counts* with `align` on the x-axis.
+
+```{r}
+ggplot(comics, aes(x = align, fill = gender)) +
+  geom_bar()
+```
+
+---
+
+#### The *proportions* tell a differenct story than the counts.
+
+-   Next, we create a stacked bar chart of `gender` *proportions* with `align` on the x-axis.
+
+```{r}
+ggplot(comics, aes(x = align, fill = gender)) + 
+  geom_bar(position = "fill") +
+  ylab("proportion")
+```
+
+---
+
+#### View the distribution of alignment of all superheroes.
+
+-   First, we change the order of the levels in `align` to improve the interpretability of the plot by passing a vector to the second argument of `factor()`.
+-   Then, we construct a bar chart that represents the distribution of alignment of all superheroes.
+
+```{r}
+comics$align <- factor(comics$align, levels = c("Bad", "Neutral", "Good"))
+
+ggplot(comics, aes(x = align)) + 
+  geom_bar()
+```
+
+---
+
+#### Conditional distributions.
+
+-   We can further break down the distribution of alignment based on gender.
+-   We can use `facet_wrap(~ gender)` to facet by gender.
+
+```{r}
+ggplot(comics, aes(x = align)) + 
+  geom_bar() +
+  facet_wrap(~ gender)
+```
+
+---
+
+<a name="two"><a/>
+
+# Exploring Numerical Data.
+
+#### Import the comics data set and view the structure.
+
+-   The `cars` data set records characteristics on all of the new models of cars for sale in the US in a certain year.
+
+```{r}
+cars = read.csv("/Volumes/Vandy Main/Data Camp/R/Exploratory Data Analysis/cars04.csv")
+str(cars)
+```
+
+---
+
+#### Plot a histogram of `city_mpg` faceted by `suv`, a logical variable indicating whether the car is an SUV or not.
+
+```{r}
+ggplot(cars, aes(x = city_mpg)) +
+  geom_histogram() +
+  facet_wrap(~ suv)
+```
+
+---
+
+#### Explore the relationship between the milage of a car and the size of the engine.
+
+-   First, we filter the data set for cars with 4, 6, or 8 cylinders and save the result as `common_cyl`.
+
+```{r}
+common_cyl <- filter(cars, ncyl == 4 | ncyl == 6 | ncyl == 8)
+```
+
+---
+
+#### Create side-by-side box plots of `city_mpg` separated out by `ncyl`.
+
+```{r}
+ggplot(common_cyl, aes(x = as.factor(ncyl), y = city_mpg)) +
+  geom_boxplot()
+```
+
+---
+
+#### Create overlaid density plots of `city_mpg` colored by `ncyl`.
+
+```{r}
+ggplot(common_cyl, aes(x= city_mpg, fill = as.factor(ncyl))) +
+  geom_density(alpha = .3)
+```
+
+---
+
+#### Create a histogram of the distribution of `horsepwr` across all cars.
+
+```{r}
+cars %>%
+  ggplot(aes(x = horsepwr)) +
+  geom_histogram() +
+  ggtitle("Distribution of Horsepower")
+```
+
+---
+
+#### Create a second histogram of the distribution of `horsepwr`, but only for those cars that have an `msrp` less than \$25,000.
+
+-   Set the `xlim()` and `ylim()` to match the previous histogram.
+
+```{r}
+cars %>% 
+  filter(msrp < 25000) %>%
+  ggplot(aes(x = horsepwr)) +
+  geom_histogram() +
+  ylim(c(0, 50)) +
+  xlim(c(90, 550)) +
+  ggtitle("Distribution of Horsepower for Affordable Cars")
+```
+
+---
+
+#### View how the histogram changes as the binwidth changes.
+
+-   First, we set `binwidth = 3`.
+-   Next, we set `binwidth = 30`.
+-   Finally, we set `binwidth = 60`.
+
+```{r}
+cars %>%
+  ggplot(aes(horsepwr)) +
+  geom_histogram(binwidth = 3) +
+  ggtitle("binwidth = 3")
+
+
+cars %>%
+  ggplot(aes(horsepwr)) +
+  geom_histogram(binwidth = 30) +
+  ggtitle("binwidth = 30")
+
+
+cars %>%
+  ggplot(aes(horsepwr)) +
+  geom_histogram(binwidth = 60) +
+  ggtitle("binwidth = 60")
+```
+
+---
+
+#### In addition to indicating the center and spread of a distribution, a box plot provides a graphical means to detect outliers.
+
+-   I construct a box plot of `msrp` (manufacturer's suggested retail price) to detect if there are unusually expensive or cheap cars.
+
+```{r}
+cars %>%
+  ggplot(aes(x = 1, y = msrp)) +
+  geom_boxplot()
+```
+
+---
+
+#### I exclude the largest 3-5 outliers by filtering the rows to retain cars less than \$100,000.
+
+-   This new data set will be called `cars_no_out`.
+
+```{r}
+cars_no_out <- cars %>%
+  filter(msrp < 100000)
+```
+
+---
+
+#### I construct a similar box plot of `msrp` using this reduced dataset.
+
+```{r}
+cars_no_out %>%
+  ggplot(aes(x = 1, y = msrp)) +
+  geom_boxplot()
+```
+
+---
+
+#### Both density plots and box plots display the central tendency and spread of the data, but the box plot is more robust to outliers.
+
+-   `city_mpg` can be represented using either a density plot or a box plot.
+-   As these plots demonstrate, `city_mpg` contains many outliers. Therefore, a box plot would be the better choice here.
+
+```{r}
+cars %>%
+  ggplot(aes(x = 1, y = city_mpg)) +
+  geom_boxplot() + 
+  coord_flip()
+
+
+cars %>%
+  ggplot(aes(x = city_mpg)) +
+  geom_density()
+```
+
+---
+
+#### Similarly, `width` can be represented using either a density plot or a box plot.
+
+-   In this case, a density plot would be the better choice.
+
+```{r}
+cars %>%
+  ggplot(aes(x = 1, y = width)) +
+  geom_boxplot() + 
+  coord_flip()
+
+
+cars %>%
+  ggplot(aes(x = width)) +
+  geom_density()
+```
+
+---
+
+#### We can look at several conditional distributions at the same time by using `facet_grid`.
+
+-   `common_cyl` contains only cars with 4, 6, or 8 cylinders.
+-   I use `common_cyl` to create a histogram of `hwy_mpg`.
+-   I grid-facet the plot rowwise by `ncyl` and columnwise by `suv`.
+
+```{r}
+common_cyl %>%
+  ggplot(aes(x = hwy_mpg)) +
+  geom_histogram() +
+  facet_grid(ncyl ~ suv, labeller = label_both) +
+  ggtitle("Highway MPG for 4, 6, and 8 cyl SUVs and non-SUVs")
+```
+
+---
+
+<a name="three"><a/>
+
+# Numerical Summaries.
+
+#### Import the gapminder data set and view the structure.
+
+-   The `gapminder` data set tracks demographic data in various countries throughout the world over time.
+
+```{r}
+gapminder = read.csv("/Volumes/Vandy Main/Data Camp/R/Exploratory Data Analysis/gapminder.csv")
+str(gapminder)
+```
+
+---
+
+#### Some of the variables have a `chr` variable type. We need to change the type to `Factor`.
+
+-   I check the structure of the data set again to make sure all `chr` variables were changed to `Factor`.
+
+```{r}
+gapminder[sapply(gapminder, is.character)] <- lapply(gapminder[sapply(gapminder, is.character)], 
+                                               as.factor)
+str(gapminder)
+```
+
+---
+
+#### I start by creating a dataset called `gap2007` that contains only data from the year 2007.
+
+```{r}
+gap2007 <- filter(gapminder, year == 2007)
+```
+
+---
+
+#### Using `gap2007`, I calculate the mean and median life expectancy for each continent.
+
+```{r}
+gap2007 %>%
+  group_by(continent) %>%
+  summarize(mean(lifeExp), median(lifeExp))
+```
+
+---
+
+#### I confirm the trends that I see in the medians by generating side-by-side box plots of life expectancy for each continent.
+
+-   This also enables us to view the spread of life expectancy for each continent, as well as any potential outliers.
+
+```{r}
+gap2007 %>%
+  ggplot(aes(x = continent, y = lifeExp)) +
+  geom_boxplot()
+```
+
+---
+
+#### If its unclear whether the distribution of the data is symmetric or skewed, it's a good idea to consider a robust measure like **IQR** in addition to the usual measures of **variance** or **standard deviation**.
+
+-   For each continent in `gap2007`, I summarize the life expectancies using `sd()`, the `IQR()`, and the count of countries, `n()`.
+
+```{r}
+gap2007 %>%
+  group_by(continent) %>%
+  summarize(sd(lifeExp), IQR(lifeExp), n())
+```
+
+---
+
+#### I compare the spread of these distributions by constructing overlaid density plots of life expectancy broken down by continent.
+
+```{r}
+gap2007 %>%
+  ggplot(aes(x = lifeExp, fill = continent)) +
+  geom_density(alpha = 0.3)
+```
+
+---
+
+#### I want to determine the most appropriate measures of center and spread for the distribution of life expectancy in the Americas.
+
+-   To view the spread, I create a density plot for life expectancy in the Americas.
+
+```{r}
+gap2007 %>%
+  filter(continent == "Americas") %>%
+  ggplot(aes(x = lifeExp)) +
+  geom_density() 
+```
+
+-   We can see that the distribution is farily normal.
+-   Therefore, I use `mean()` and `sd()` as measures of center and spread.
+
+```{r}
+gap2007 %>%
+  filter(continent == "Americas") %>%
+  summarize(mean(lifeExp), sd(lifeExp))
+```
+
+---
+
+#### I want to determine the appropriate measures of center and spread for the distribution of country *populations* across the entire `gap2007` data set.
+
+-   To view the spread, I create a density plot for country level populations.
+
+```{r}
+gap2007 %>%
+  ggplot(aes(x = pop)) +
+  geom_density() 
+```
+
+-   We can see that the density plot has a strong skew.
+-   Therefore, I use `median()` and `IQR()` as measures of center and spread.
+
+```{r}
+gap2007 %>%
+  summarize(median(pop), IQR(pop))
+```
+
+---
+
+#### Highly skewed distributions can make it very difficult to learn anything from a visualization. Transformations can be helpful in revealing the more subtle structure.
+
+-   As the last plot demonstrated, the population variable is highly skewed.
+
+```{r}
+gap2007 %>%
+  ggplot(aes(x = pop)) +
+  geom_density()
+```
+
+---
+
+#### The population variable can be transformed using the natural logarithm funciton, `log()`.
+
+-   I take the transformed variable and add it to the `gap2007` data frame using `mutate(log_pop = log(pop))`.
+
+```{r}
+gap2007 <- gap2007 %>%
+  mutate(log_pop = log(pop))
+str(gap2007)
+```
+
+---
+
+#### I create a density plot of the transformed population variable.
+
+-   Using the transformed population variable makes for a much better visualization.
+
+```{r}
+gap2007 %>%
+  ggplot(aes(x = log_pop)) +
+  geom_density()
+```
+
+---
+
+#### The box plot below visualizes life expenctancies of countries in Asia.
+
+-   There is one clear outlier: a country with a notably low life expectancy.
+
+```{r}
+gap2007 %>%
+  filter(continent == "Asia") %>%
+  ggplot(aes(x = continent, y = lifeExp)) + 
+  geom_boxplot()
+```
+
+---
+
+#### I use `min(gap2007_Asia$lifeExp)` to find the outlier.
+
+```{r}
+gap2007_Asia = gap2007 %>%
+  filter(continent == "Asia")
+
+  min(gap2007_Asia$lifeExp)
+
+```
+
+---
+
+#### I find the observation where life expectancy is 43.828.
+
+```{r}
+gap2007_Asia %>%
+    filter(lifeExp == 43.828)
+```
+
+---
+
+#### I create a new variable called `is_outlier` that is `TRUE` for countries with life expectancy less than 50.
+
+-   This variable is only true for Afghanistan.
+
+```{r}
+gap_asia <- gap2007 %>%
+ filter(continent == "Asia") %>%
+ mutate(is_outlier = lifeExp < 50)
+head(gap_asia)
+```
+
+---
+
+#### I filter `gap_asia` to remove all outliers, then create another box plot of the remaining life expectancies.
+
+```{r}
+gap_asia %>%
+ filter(!is_outlier) %>%
+ ggplot(aes(x = 1, y = lifeExp)) +
+ geom_boxplot()
+```

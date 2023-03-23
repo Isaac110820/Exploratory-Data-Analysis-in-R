@@ -11,7 +11,7 @@
 
 <meta name="author" content="Isaac Baca" />
 
-<meta name="date" content="2023-03-11" />
+<meta name="date" content="2023-03-23" />
 
 <title>Exploratory Data Analysis</title>
 
@@ -365,11 +365,26 @@ pre code {
 
 <h1 class="title toc-ignore">Exploratory Data Analysis</h1>
 <h4 class="author">Isaac Baca</h4>
-<h4 class="date">2023-03-11</h4>
+<h4 class="date">2023-03-23</h4>
 
 </div>
 
 
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This project demonstrates a variety of data exploration techniques
+using three different data sets:</p>
+<p>The <em>comics</em> data set which contains information on all comic
+characters that have been introduced by DC and Marvel is used to explore
+categorical data.</p>
+<p>The <em>cars</em> data set which contains information on all new
+models of cars for sale in the US in a certain year is used to explore
+numerical data.</p>
+<p>The <em>gapminder</em> data set which contains information on
+demographic data in various countries throughout the world is used to
+explore numerical summaries.</p>
+<hr />
+</div>
 <div id="table-of-contents" class="section level1">
 <h1>Table of contents</h1>
 <ol style="list-style-type: decimal">
@@ -394,8 +409,7 @@ library(ggplot2)</code></pre>
 <li>The comics data set has information on all comic characters that
 have been introduced by DC and Marvel.</li>
 </ul>
-<pre class="r"><code>comics = read.csv(&quot;/Volumes/Vandy Main/Data Camp/R/Exploratory Data Analysis/comics.csv&quot;)
-str(comics)</code></pre>
+<pre class="r"><code>str(comics)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    23272 obs. of  11 variables:
 ##  $ name        : chr  &quot;Spider-Man (Peter Parker)&quot; &quot;Captain America (Steven Rogers)&quot; &quot;Wolverine (James \\\&quot;Logan\\\&quot; Howlett)&quot; &quot;Iron Man (Anthony \\\&quot;Tony\\\&quot; Stark)&quot; ...
 ##  $ id          : chr  &quot;Secret&quot; &quot;Public&quot; &quot;Public&quot; &quot;Public&quot; ...
